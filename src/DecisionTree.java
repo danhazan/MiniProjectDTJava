@@ -119,6 +119,11 @@ class InternalNode extends Node {
         return new int[][] {leftIndexes, rightIndexes};
     }
 
+    /**
+     * Set node question to the given one, and create child leafs with their corresponding
+     * indexes and digits, based on the application of that question
+     * @param question - the question id
+     */
     public void apply(int question) {
         double[][] NiArrays = getSplitNiArrays(question);
         double[] leftNiArray = NiArrays[0];
@@ -154,7 +159,6 @@ class LeafNode extends Node {
      * @return - the entropy
      */
     private double HL() {
-        //TODO: cache this!!!
         double[] NiArray = new double[10];
         for(int im=0; im<indexes.length; im++){
             NiArray[tree.matrix[im][0]]++;
@@ -199,7 +203,7 @@ class LeafNode extends Node {
 
         double leftNL = DoubleStream.of(leftNiArray).sum();
         double rightNL = DoubleStream.of(rightNiArray).sum();
-        int NL = indexes.length;  // TODO: check before if it's zero
+        int NL = indexes.length;  // TODO: check before if it's zero?
 
 //        System.out.println(q);
 //        System.out.println(Arrays.toString(leftNiArray));
@@ -210,6 +214,10 @@ class LeafNode extends Node {
         return (leftNL / NL) * HL(leftNiArray, leftNL) + (rightNL / NL) * HL(rightNiArray, rightNL);
     }
 
+    /**
+     * Iterates all questions, calculates the information gain for each of them,
+     * and returns the best question along with it's info gain
+     */
     public IGStruct getBestIG(){
         IGStruct bestIG = new IGStruct(-1, -1);
 
@@ -223,6 +231,12 @@ class LeafNode extends Node {
         return bestIG;
     }
 
+    /**
+     * replace the leaf with an internal node set to the given question,
+     * and delegate the rest of the setup to it.
+     * @param question - the question id
+     * @return - the new internal node
+     */
     public InternalNode apply(int question){
         InternalNode newNode = new InternalNode(tree, parent, indexes);
         if (parent == null) {  // means this is the initial root leaf
@@ -262,6 +276,7 @@ class IGStruct {
     }
 
     public void setIfBigger(LeafNode leaf) {
+        // TODO: check the max possible IG of leaf beforehand
         IGStruct igs = leaf.getBestIG().normalized(leaf.indexes.length);
         setIfBigger(new IGStruct(igs.IG, igs.question, leaf));
     }

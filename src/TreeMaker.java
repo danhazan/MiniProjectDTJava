@@ -5,8 +5,8 @@ import java.util.Calendar;
 import java.util.List;
 
 public class TreeMaker {
-    public static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-//    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
+//    public static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
 
     public static DecisionTree makeTreeVer1(int T) {
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));

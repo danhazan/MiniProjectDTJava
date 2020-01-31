@@ -1,6 +1,8 @@
 public class Main {
 
     public static void main(String[] args) {
-        TreeMaker.makeTreeVer1(8);
+        int L = 8;
+        int T = (int) Math.pow(2, L);
+        TreeMaker.makeTreeVer1(T);
     }
 }
