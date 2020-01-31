@@ -12,7 +12,7 @@ public class DecisionTree {
         this.matrix = matrix;
 
         int[] initial_indexes = IntStream.rangeClosed(0, matrix.length - 1).toArray();
-        this.root = new LeafNode(this, null, 0, initial_indexes);
+        this.root = new LeafNode(this, null, initial_indexes, 0);
     }
 
     public void setRoot(Node newRoot) {
@@ -30,6 +30,13 @@ abstract class Node {
     protected int[] indexes;
 
 
+    /**
+     * A basic node representation
+     * @param tree - the original tree object
+     * @param parent - the parent node
+     * @param indexes - a list containing all the images that reach this node,
+     *                represented by their index in the original matrix (the questions and answers matrix)
+     */
     protected Node(DecisionTree tree, InternalNode parent, int[] indexes) {
         this.tree = tree;
         this.parent = parent;
@@ -41,10 +48,11 @@ abstract class Node {
         double[] rightNiArray = new double[10];
 
         for(int im=0; im<indexes.length; im++){
-            if (tree.matrix[im][question] == 0) {
-                leftNiArray[tree.matrix[im][0]]++;  // left is false
+            int index = indexes[im];  // the actual index in tree.matrix
+            if (tree.matrix[index][question] == 0) {
+                leftNiArray[tree.matrix[index][0]]++;  // left is false
             } else {
-                rightNiArray[tree.matrix[im][0]]++;  // right is true
+                rightNiArray[tree.matrix[index][0]]++;  // right is true
             }
         }
 
@@ -58,10 +66,18 @@ class InternalNode extends Node {
     private Node left;
     private Node right;
 
-    protected InternalNode(DecisionTree tree, InternalNode parent, int[] indexes) {
+    /**
+     * An internal node, which is initialized with a question, and creates it's own child nodes
+     * based on that question (and the indexes)
+     * @param question - a question id, from 1 to 785 (because column 0 in the matrix holds the labels)
+     */
+    protected InternalNode(DecisionTree tree, InternalNode parent, int[] indexes, int question) {
         super(tree, parent, indexes);
+        this.question = question;
         left = null;
         right = null;
+
+        apply(question);
     }
 
     public void swapChild(Node oldChild, Node newChild){
@@ -109,10 +125,11 @@ class InternalNode extends Node {
         int rightCounter = 0;
 
         for(int im=0; im<indexes.length; im++){
-            if (tree.matrix[im][question] == 0) {
-                leftIndexes[leftCounter++] = im;  // left is false
+            int index = indexes[im];  // the actual index in tree.matrix
+            if (tree.matrix[index][question] == 0) {
+                leftIndexes[leftCounter++] = index;  // left is false
             } else {
-                rightIndexes[rightCounter++] = im;  // right is true
+                rightIndexes[rightCounter++] = index;  // right is true
             }
         }
 
@@ -134,8 +151,9 @@ class InternalNode extends Node {
         int[] commonDigits = getMostCommonDigits(question, leftNiArray, rightNiArray);
         int[][] indexes = getSplitIndexes(question, leftNL, rightNL);
 
-        left = new LeafNode(tree, this, commonDigits[0], indexes[0]);
-        right = new LeafNode(tree, this, commonDigits[1], indexes[1]);
+
+        left = new LeafNode(tree, this, indexes[0], commonDigits[0]);
+        right = new LeafNode(tree, this, indexes[1], commonDigits[1]);
     }
 
 }
@@ -143,7 +161,11 @@ class InternalNode extends Node {
 class LeafNode extends Node {
     private int digit;
 
-    protected LeafNode(DecisionTree tree, InternalNode parent, int digit, int[] indexes) {
+    /**
+     * A leaf, which holds the most common digit in the images that reach it (based in it's indexes)
+     * @param digit - a digit from 0 to 9
+     */
+    protected LeafNode(DecisionTree tree, InternalNode parent, int[] indexes, int digit) {
         super(tree, parent, indexes);
         this.digit = digit;
     }
@@ -159,6 +181,7 @@ class LeafNode extends Node {
      * @return - the entropy
      */
     private double HL() {
+        //TODO: cache this??
         double[] NiArray = new double[10];
         for(int im=0; im<indexes.length; im++){
             NiArray[tree.matrix[im][0]]++;
@@ -205,94 +228,111 @@ class LeafNode extends Node {
         double rightNL = DoubleStream.of(rightNiArray).sum();
         int NL = indexes.length;  // TODO: check before if it's zero?
 
-//        System.out.println(q);
-//        System.out.println(Arrays.toString(leftNiArray));
-//        System.out.println(Arrays.toString(rightNiArray));
-//        System.out.println(leftNL + rightNL);
-//        System.out.println();
+//        if (q== 379) {
+//            System.out.println(q);
+//            System.out.println(Arrays.toString(leftNiArray));
+//            System.out.println(Arrays.toString(rightNiArray));
+//            System.out.println(leftNL + rightNL);
+//            System.out.println();
+//        }
 
         return (leftNL / NL) * HL(leftNiArray, leftNL) + (rightNL / NL) * HL(rightNiArray, rightNL);
     }
 
     /**
      * Iterates all questions, calculates the information gain for each of them,
-     * and returns the best question along with it's info gain
+     * and returns the best question along with it's info gain, already factored by N(L) of the leaf!
+     *
+     * This is probably the heaviest operation in the whole algorithm.
      */
     public IGStruct getBestIG(){
-        IGStruct bestIG = new IGStruct(-1, -1);
-
-        // iterate all questions
-        for(int q=1; q<tree.matrix[0].length; q++){  // start from 1 to skip labels column
-            double currentIG = HL() - HX(q);
-
-            bestIG.setIfBigger(currentIG, q);
+        double _HL = HL();  // TODO: probably good enough caching
+        if (_HL == 0) {
+            return new IGStruct(this, 0, 1);  // choose question 1 for debug-ability
         }
 
-        return bestIG;
+        IGStruct bestIG = new IGStruct(null, -1, -1);  // this should be overwritten immediately
+        // iterate all questions
+        for(int q=1; q<tree.matrix[0].length; q++){  // start from 1 to skip labels column
+            double currentIG = _HL - HX(q);
+
+            bestIG.setIfBigger(this, currentIG, q);
+        }
+
+        return bestIG.factored();
     }
 
     /**
-     * replace the leaf with an internal node set to the given question,
-     * and delegate the rest of the setup to it.
+     * Transform the leaf into an internal node, set to the given question
      * @param question - the question id
      * @return - the new internal node
      */
     public InternalNode apply(int question){
-        InternalNode newNode = new InternalNode(tree, parent, indexes);
+        InternalNode newNode = new InternalNode(tree, parent, indexes, question);
         if (parent == null) {  // means this is the initial root leaf
             tree.setRoot(newNode);
         } else {
             parent.swapChild(this, newNode);
         }
-        newNode.apply(question);
         return newNode;
     }
 }
 
 
 class IGStruct {
+    private LeafNode leaf;
     private double IG;
     private int question;
-    private LeafNode leaf;
 
-    IGStruct(double ig, int question, LeafNode leaf) {
-        set(ig, question, leaf);
+    IGStruct(LeafNode leaf, double ig, int question) {
+        set(leaf, ig, question);
     }
 
-    IGStruct(double ig, int question) {
-        set(ig, question, null);
+    /**
+     * Implemented to support List.remove()
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof IGStruct) {
+            return this.equals((IGStruct) other);
+        }
+        return false;
     }
 
-    public void set(double ig, int q, LeafNode l) {
+    public boolean equals(IGStruct other) {
+        return (leaf == other.leaf && IG == other.IG && question == other.question);
+    }
+
+    public void set(LeafNode l, double ig, int q) {
+        leaf = l;
         IG = ig;
         question = q;
-        leaf = l;
     }
 
     public void setIfBigger(IGStruct other) {
         if (this.IG < other.getIG()) {
-            this.set(other.IG, other.question, other.leaf);
+            this.set(other.leaf, other.IG, other.question);
         }
     }
 
-    public void setIfBigger(LeafNode leaf) {
-        // TODO: check the max possible IG of leaf beforehand
-        IGStruct igs = leaf.getBestIG().normalized(leaf.indexes.length);
-        setIfBigger(new IGStruct(igs.IG, igs.question, leaf));
+    public void setIfBigger(LeafNode l, double ig, int question) {
+        setIfBigger(new IGStruct(l, ig, question));
     }
 
-
-    public void setIfBigger(double ig, int question) {
-        setIfBigger(new IGStruct(ig, question));
-    }
-
-    public void normalize(double NL){
+    public void factorBy(double NL){
         IG *= NL;
     }
 
-    public IGStruct normalized(double NL) {
-        normalize(NL);
+    /**
+     * NOTICE: this function first sets the IG, then returns the same object
+     */
+    public IGStruct factored(double NL) {
+        factorBy(NL);
         return this;
+    }
+
+    public IGStruct factored() {
+        return factored(leaf.indexes.length);
     }
 
     public double getIG() {

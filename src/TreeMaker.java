@@ -1,6 +1,5 @@
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -20,19 +19,29 @@ public class TreeMaker {
         DecisionTree tree = new DecisionTree(T, images_matrix);
 
 
-        List<LeafNode> leafs = new ArrayList<>(T);  // is it T??
-        leafs.add((LeafNode) tree.getRoot());
+        List<IGStruct> leafsIGs = new ArrayList<>(T);  // is it T??
+        LeafNode root = (LeafNode) tree.getRoot();
+        leafsIGs.add(root.getBestIG());
 
         for(int i=0; i<T; i++) {
-            IGStruct bestIG = new IGStruct(-1, -1);
-            for(LeafNode l: leafs){
+            IGStruct bestIG = new IGStruct(null, -1, -1);
+            for(IGStruct l: leafsIGs){
                 bestIG.setIfBigger(l);
             }
+
+            leafsIGs.remove(bestIG);  // this is okay because of the overriden equals() in IGStruct
             LeafNode chosenLeaf = bestIG.getLeaf();
-            leafs.remove(chosenLeaf);
             InternalNode newInternal = chosenLeaf.apply(bestIG.getQuestion());
-            leafs.add((LeafNode) newInternal.getLeft());
-            leafs.add((LeafNode) newInternal.getRight());
+            LeafNode left = (LeafNode) newInternal.getLeft();
+            LeafNode right = (LeafNode) newInternal.getRight();
+
+            //TODO: optimization option: don't calculate the best IG immediately.
+            //TODO: It might be better to save the maximum possible IG first (N(L)*log(10))
+            //TODO: And do the calculation only if it has a potential to be the chosen leaf
+
+            //TODO: the last calculation can probably be skipped, since the results aren't needed anymore
+            leafsIGs.add(left.getBestIG());
+            leafsIGs.add(right.getBestIG());
         }
 
 
