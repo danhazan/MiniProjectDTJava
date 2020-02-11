@@ -133,6 +133,10 @@ class InternalNode extends Node {
         }
     }
 
+    public int getQuestion() {
+        return question;
+    }
+
     public Node getLeft() {
         return left;
     }
@@ -220,6 +224,10 @@ class LeafNode extends Node {
 
     protected Node copy() {
         return new LeafNode(this);
+    }
+
+    public int getDigit() {
+        return digit;
     }
 
     private double log2(double n)

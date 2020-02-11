@@ -5,21 +5,21 @@ import java.util.stream.IntStream;
 
 
 public class TreeMaker {
-    public static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-//    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
+//    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
 
     /**
      * binary check for a number being a power of 2 (or 0)
      */
-    public static boolean isPowerOf2(int n) {
+    private static boolean isPowerOf2(int n) {
         return (n & (n - 1)) == 0;
     }
 
-    public static int[][] splitValidationSet(int indexes, double P) {
+    private static int[][] splitValidationSet(int indexes, double P) {
         List<Integer> allIndexes = IntStream.rangeClosed(0, indexes - 1).boxed().collect(Collectors.toList());
         Collections.shuffle(allIndexes);
 
-        int validationLength = (int) (P* (double) indexes);
+        int validationLength = (int) (P * (double) indexes);
         List<Integer> validation = allIndexes.subList(0, validationLength);
         List<Integer> training = allIndexes.subList(validationLength, indexes);
 
@@ -33,6 +33,16 @@ public class TreeMaker {
         return sets;
     }
 
+    private static int[][] fromIndexes(int[][] data, int[] indexes) {
+        int[][] result = new int[indexes.length][];
+
+        for(int im=0; im<indexes.length; im++) {
+            result[im] = data[indexes[im]];
+        }
+        return result;
+    }
+
+
     public static DecisionTree makeTreeVer1(int L, double P) {
         // parse images and convert to answers matrix
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
@@ -42,18 +52,19 @@ public class TreeMaker {
 
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
         Questions.convertToAnswersMatrixVer1(images_matrix);
+        int[][] answers_matrix = images_matrix;  // renaming for readability
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
-        int[][] sets = splitValidationSet(images_matrix.length, P);
-        int[] validationSet = sets[0];
-        int[] trainingSet = sets[1];
+        int[][] sets = splitValidationSet(answers_matrix.length, P);
+        int[] validationIndexes = sets[0];
+        int[] trainingIndexes = sets[1];
 
         int maxT = (int) Math.pow(2, L);
         List<DecisionTree> trees = new ArrayList<>(L+1);
 
 
         // create empty tree and initialize root, adding it as initial leaf to the leafs array
-        DecisionTree tree = new DecisionTree(images_matrix, validationSet);
+        DecisionTree tree = new DecisionTree(answers_matrix, trainingIndexes);
         List<IGStruct> leafsIGs = new ArrayList<>(maxT);  // is it T??
 
         LeafNode root = (LeafNode) tree.getRoot();
@@ -97,6 +108,22 @@ public class TreeMaker {
 
 
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-        return tree;
+        int[][] validationSet = fromIndexes(answers_matrix, validationIndexes);
+        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+
+        double bestRate = -1;
+        DecisionTree bestTree = null;
+        for(DecisionTree t: trees) {
+            double curRate = TreePredictor.getSuccessRate(t, validationSet);
+
+            if(bestRate < curRate) {
+                bestRate = curRate;
+                bestTree = t;
+            }
+        }
+
+        System.out.println(bestRate);
+        System.out.println(bestTree.getT());
+        return bestTree;
     }
 }
