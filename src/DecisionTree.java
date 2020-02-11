@@ -7,12 +7,20 @@ public class DecisionTree {
     int[][] matrix;
     private Node root;
 
-    DecisionTree(int t, int[][] matrix) {
-        this.T = t;
+    DecisionTree(int[][] matrix, int[] indexes) {
         this.matrix = matrix;
+        this.root = new LeafNode(this, null, indexes, 0);
+    }
 
-        int[] initial_indexes = IntStream.rangeClosed(0, matrix.length - 1).toArray();
-        this.root = new LeafNode(this, null, initial_indexes, 0);
+
+    /**
+     * Makes a copy of the tree.
+     * Copies only the data relevant for prediction,
+     * without the learning part
+     */
+    DecisionTree(DecisionTree other) {
+        matrix = null;
+        root = other.root.copy();
     }
 
     public void setRoot(Node newRoot) {
@@ -21,6 +29,14 @@ public class DecisionTree {
 
     public Node getRoot() {
         return root;
+    }
+
+    public int getT() {
+        return T;
+    }
+
+    public void setT(int t) {
+        T = t;
     }
 }
 
@@ -42,6 +58,22 @@ abstract class Node {
         this.parent = parent;
         this.indexes = indexes;
     }
+
+    /**
+     * All copy constructors ignore this values, since they
+     * are relevant only to the tree building algorithm,
+     * and copying is only for prediction
+     */
+    protected Node(Node other){
+        tree = null;
+        parent = null;
+        indexes = null;
+    }
+
+    protected abstract Node copy();
+
+    protected Node(){}  // to allow copy constructors of deriving classes
+
 
     public double[][] getSplitNiArrays(int question) {
         double[] leftNiArray = new double[10];
@@ -69,7 +101,7 @@ class InternalNode extends Node {
     /**
      * An internal node, which is initialized with a question, and creates it's own child nodes
      * based on that question (and the indexes)
-     * @param question - a question id, from 1 to 785 (because column 0 in the matrix holds the labels)
+     * @param question - a question id, from 1 to 785 (in ver1) (because column 0 in the matrix holds the labels)
      */
     protected InternalNode(DecisionTree tree, InternalNode parent, int[] indexes, int question) {
         super(tree, parent, indexes);
@@ -78,6 +110,17 @@ class InternalNode extends Node {
         right = null;
 
         apply(question);
+    }
+
+    protected InternalNode(InternalNode other) {
+        super(other);
+        question = other.question;
+        left = other.left.copy();
+        right = other.right.copy();
+    }
+
+    protected Node copy() {
+        return new InternalNode(this);
     }
 
     public void swapChild(Node oldChild, Node newChild){
@@ -168,6 +211,15 @@ class LeafNode extends Node {
     protected LeafNode(DecisionTree tree, InternalNode parent, int[] indexes, int digit) {
         super(tree, parent, indexes);
         this.digit = digit;
+    }
+
+    protected LeafNode(LeafNode other) {
+        super(other);
+        digit = other.digit;
+    }
+
+    protected Node copy() {
+        return new LeafNode(this);
     }
 
     private double log2(double n)

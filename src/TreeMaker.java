@@ -1,35 +1,76 @@
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 
 public class TreeMaker {
-//    public static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
+    public static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+//    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
 
-    public static DecisionTree makeTreeVer1(int T) {
+    /**
+     * binary check for a number being a power of 2 (or 0)
+     */
+    public static boolean isPowerOf2(int n) {
+        return (n & (n - 1)) == 0;
+    }
+
+    public static int[][] splitValidationSet(int indexes, double P) {
+        List<Integer> allIndexes = IntStream.rangeClosed(0, indexes - 1).boxed().collect(Collectors.toList());
+        Collections.shuffle(allIndexes);
+
+        int validationLength = (int) (P* (double) indexes);
+        List<Integer> validation = allIndexes.subList(0, validationLength);
+        List<Integer> training = allIndexes.subList(validationLength, indexes);
+
+        Collections.sort(validation);
+        Collections.sort(training);
+
+        int[][] sets = new int[2][];
+        sets[0] = validation.stream().mapToInt(i->i).toArray();
+        sets[1] = training.stream().mapToInt(i->i).toArray();
+
+        return sets;
+    }
+
+    public static DecisionTree makeTreeVer1(int L, double P) {
+        // parse images and convert to answers matrix
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
         int[][] images_matrix = Images.parse_csv(TreeMaker.DATABSE_FILE_PATH);
         System.out.println(images_matrix.length);
         System.out.println(images_matrix[0].length);
+
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
         Questions.convertToAnswersMatrixVer1(images_matrix);
-
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-        DecisionTree tree = new DecisionTree(T, images_matrix);
+
+        int[][] sets = splitValidationSet(images_matrix.length, P);
+        int[] validationSet = sets[0];
+        int[] trainingSet = sets[1];
+
+        int maxT = (int) Math.pow(2, L);
+        List<DecisionTree> trees = new ArrayList<>(L+1);
 
 
-        List<IGStruct> leafsIGs = new ArrayList<>(T);  // is it T??
+        // create empty tree and initialize root, adding it as initial leaf to the leafs array
+        DecisionTree tree = new DecisionTree(images_matrix, validationSet);
+        List<IGStruct> leafsIGs = new ArrayList<>(maxT);  // is it T??
+
         LeafNode root = (LeafNode) tree.getRoot();
         leafsIGs.add(root.getBestIG());
 
-        for(int i=0; i<T; i++) {
+        // main algorithm: for T times, swap the best leaf with an internal node
+        for(int i=1; i<=maxT; i++) {
             IGStruct bestIG = new IGStruct(null, -1, -1);
+
+            // find leaf with best information gain
             for(IGStruct l: leafsIGs){
                 bestIG.setIfBigger(l);
             }
 
-            leafsIGs.remove(bestIG);  // this is okay because of the overriden equals() in IGStruct
+            leafsIGs.remove(bestIG);  // this is okay because of the overridden equals() in IGStruct
+
+            // swap with an internal node containing the best question
             LeafNode chosenLeaf = bestIG.getLeaf();
             InternalNode newInternal = chosenLeaf.apply(bestIG.getQuestion());
             LeafNode left = (LeafNode) newInternal.getLeft();
@@ -40,8 +81,18 @@ public class TreeMaker {
             //TODO: And do the calculation only if it has a potential to be the chosen leaf
 
             //TODO: the last calculation can probably be skipped, since the results aren't needed anymore
+
+            // add the new leafs to the leaf array
             leafsIGs.add(left.getBestIG());
             leafsIGs.add(right.getBestIG());
+
+
+            // copy the tree if it's a proper T value (power of 2)
+            if (isPowerOf2(i)) {
+                DecisionTree copiedTree = new DecisionTree(tree);
+                copiedTree.setT(i);
+                trees.add(copiedTree);
+            }
         }
 
 
