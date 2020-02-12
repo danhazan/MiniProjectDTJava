@@ -5,8 +5,8 @@ import java.util.stream.IntStream;
 
 
 public class TreeMaker {
-    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-//    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
+//    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
 //    public static final String DATABSE_FILE_PATH = "resources/kannada_train.csv";
 
     /**
