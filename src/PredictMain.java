@@ -7,7 +7,7 @@ public class PredictMain {
         double P = 20/100.0;
         // TODO: is p=0 or p=100 acceptable
         DecisionTree t = TreeMaker.makeTreeVer1(L, P);
-        int[][] images_matrix = Images.parse_csv(TreeMaker.DATABSE_FILE_PATH);
+        int[][] images_matrix = Images.parse_csv(DATABSE_FILE_PATH);
 
         TreePredictor.runPrediction(t, images_matrix);
     }
