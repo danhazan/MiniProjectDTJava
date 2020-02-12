@@ -5,8 +5,8 @@ import java.util.stream.IntStream;
 
 
 public class TreeMaker {
-//    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
+    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+//    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
 //    public static final String DATABSE_FILE_PATH = "resources/kannada_train.csv";
 
     /**
@@ -52,8 +52,8 @@ public class TreeMaker {
         System.out.println(images_matrix[0].length);
 
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-        Questions.convertToAnswersMatrixVer1(images_matrix);
-        int[][] answers_matrix = images_matrix;  // renaming for readability
+
+        int[][] answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix);
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         int[][] sets = splitValidationSet(answers_matrix.length, P);
