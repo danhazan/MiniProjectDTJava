@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 public class TreeMaker {
 //    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
     public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
+//    public static final String DATABSE_FILE_PATH = "resources/kannada_train.csv";
 
     /**
      * binary check for a number being a power of 2 (or 0)
@@ -122,8 +123,9 @@ public class TreeMaker {
             }
         }
 
-        System.out.println(bestRate);
+        System.out.println("chosen:");
         System.out.println(bestTree.getT());
+        System.out.println(bestRate);
         return bestTree;
     }
 }

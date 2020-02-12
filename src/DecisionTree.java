@@ -244,9 +244,10 @@ class LeafNode extends Node {
         //TODO: cache this??
         double[] NiArray = new double[10];
         for(int im=0; im<indexes.length; im++){
-            NiArray[tree.matrix[im][0]]++;
+            NiArray[tree.matrix[indexes[im]][0]]++;
         }
 
+        //TODO: change to indexes.length?
         double NL = DoubleStream.of(NiArray).sum();
         return HL(NiArray, NL);
     }

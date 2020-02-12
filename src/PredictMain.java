@@ -1,5 +1,6 @@
 public class PredictMain {
     private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+//    private static final String DATABSE_FILE_PATH = "resources/kannada_test.csv";
 
     public static void main(String[] args) {
         int L = 8;
