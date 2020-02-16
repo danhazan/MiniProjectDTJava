@@ -1,3 +1,5 @@
+import sun.security.krb5.internal.crypto.Des;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,34 +46,14 @@ public class TreeMaker {
     }
 
 
-    public static DecisionTree makeTreeVer1(int L, double P) {
-        // parse images and convert to answers matrix
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-        int[][] images_matrix = Images.parse_csv(TreeMaker.DATABSE_FILE_PATH);
-        System.out.println(images_matrix.length);
-        System.out.println(images_matrix[0].length);
-
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-
-        int[][] answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix);
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-
-        int[][] sets = splitValidationSet(answers_matrix.length, P);
-        int[] validationIndexes = sets[0];
-        int[] trainingIndexes = sets[1];
-
+    private static List<DecisionTree> runAlgorithm(DecisionTree buildTree, int L, boolean singleTree) {
         int maxT = (int) Math.pow(2, L);
-        List<DecisionTree> trees = new ArrayList<>(L+1);
+        List<DecisionTree> trees = new ArrayList<>(singleTree ? 1 : L+1);  // list of potential trees (or just the one)
+        List<IGStruct> leafsIGs = new ArrayList<>(maxT);  // a list of all the leafs in the tree with their max IGS
+        LeafNode root = (LeafNode) buildTree.getRoot();
+        leafsIGs.add(root.getBestIG());  // initialized with the root
 
-
-        // create empty tree and initialize root, adding it as initial leaf to the leafs array
-        DecisionTree tree = new DecisionTree(answers_matrix, trainingIndexes);
-        List<IGStruct> leafsIGs = new ArrayList<>(maxT);  // is it T??
-
-        LeafNode root = (LeafNode) tree.getRoot();
-        leafsIGs.add(root.getBestIG());
-
-        // main algorithm: for T times, swap the best leaf with an internal node
+        // main algorithm: in each iteration, swap the best leaf with an internal node
         for(int i=1; i<=maxT; i++) {
             IGStruct bestIG = new IGStruct(null, -1, -1);
 
@@ -88,30 +70,54 @@ public class TreeMaker {
             LeafNode left = (LeafNode) newInternal.getLeft();
             LeafNode right = (LeafNode) newInternal.getRight();
 
-            //TODO: optimization option: don't calculate the best IG immediately.
-            //TODO: It might be better to save the maximum possible IG first (N(L)*log(10))
-            //TODO: And do the calculation only if it has a potential to be the chosen leaf
-
-            //TODO: the last calculation can probably be skipped, since the results aren't needed anymore
-
-            // add the new leafs to the leaf array
+            // add the new leafs to the list
             leafsIGs.add(left.getBestIG());
             leafsIGs.add(right.getBestIG());
 
 
             // copy the tree if it's a proper T value (power of 2)
-            if (isPowerOf2(i)) {
-                DecisionTree copiedTree = new DecisionTree(tree);
-                copiedTree.setT(i);
-                trees.add(copiedTree);
+            if (isPowerOf2(i) && !singleTree) {
+                trees.add(new DecisionTree(buildTree, i));
             }
         }
 
+        if (singleTree) {
+            trees.add(new DecisionTree(buildTree, maxT));
+        }
+
+        return trees;
+    }
+
+
+    public static DecisionTree makeTree(int L, double P, boolean ver2) {
+        // parse images and convert to answers matrix
+        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+        int[][] images_matrix = Images.parse_csv(TreeMaker.DATABSE_FILE_PATH);
+        System.out.println(images_matrix.length);
+        System.out.println(images_matrix[0].length);
 
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+
+        int[][] answers_matrix;
+        if(ver2){
+            answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix);
+        } else {
+            answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
+        }
+
+        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+
+        int[][] indexes = splitValidationSet(answers_matrix.length, P);
+        int[] validationIndexes = indexes[0];
+        int[] trainingIndexes = indexes[1];
+
+        // run the algorithm the first time - to generate a tree for every T value
+        DecisionTree validationTree = new DecisionTree(answers_matrix, trainingIndexes);
+        List<DecisionTree> trees = runAlgorithm(validationTree, L, false);
+
+
+        // choose the tree with the best success rate using the validation set on the generated trees
         int[][] validationSet = fromIndexes(answers_matrix, validationIndexes);
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-
         double bestRate = -1;
         DecisionTree bestTree = null;
         for(DecisionTree t: trees) {
@@ -122,10 +128,19 @@ public class TreeMaker {
                 bestTree = t;
             }
         }
+        validationSet = null;  // free up some memory
 
         System.out.println("chosen:");
         System.out.println(bestTree.getT());
         System.out.println(bestRate);
-        return bestTree;
+
+
+
+        // running algorithm on both the validation and training set with the best sized tree
+        int[] allIndexes = splitValidationSet(answers_matrix.length, 0)[1];
+        DecisionTree finalTree = new DecisionTree(answers_matrix, allIndexes);
+        finalTree = runAlgorithm(finalTree, L, true).get(0);  // only one tree in the list
+        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+        return finalTree;
     }
 }

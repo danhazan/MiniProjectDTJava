@@ -1,3 +1,5 @@
+import sun.security.krb5.internal.crypto.Des;
+
 import java.util.NoSuchElementException;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -21,6 +23,11 @@ public class DecisionTree {
     DecisionTree(DecisionTree other) {
         matrix = null;
         root = other.root.copy();
+    }
+
+    DecisionTree(DecisionTree other, int T) {
+        this(other);
+        this.T = T;
     }
 
     public void setRoot(Node newRoot) {

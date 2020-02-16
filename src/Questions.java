@@ -1,5 +1,3 @@
-import java.util.List;
-
 public class Questions {
     private static final int MAX_BYTE_VAL = 255;
 
@@ -142,7 +140,6 @@ public class Questions {
 
 
     public static int[][] convertToAnswersMatrixVer2(int[][] data) {
-        int[][] answers_list = new int[data.length][1000];
         int dim = (int) Math.sqrt(data[0].length - 1);  // 28
 
         for(int im=0; im<data.length; im++) {
