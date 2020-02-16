@@ -89,7 +89,7 @@ public class TreeMaker {
     }
 
 
-    public static DecisionTree makeTree(int L, double P, boolean ver2) {
+    public static DecisionTree makeTree(int L, double P, Map<String, Integer> ver2Config) {
         // parse images and convert to answers matrix
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
         int[][] images_matrix = Images.parse_csv(TreeMaker.DATABSE_FILE_PATH);
@@ -99,12 +99,13 @@ public class TreeMaker {
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         int[][] answers_matrix;
-        if(ver2){
-            answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix);
+        if(ver2Config != null){
+            answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, ver2Config);
         } else {
             answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
         }
 
+        System.out.println(answers_matrix[0].length);
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         int[][] indexes = splitValidationSet(answers_matrix.length, P);
@@ -133,8 +134,6 @@ public class TreeMaker {
         System.out.println("chosen:");
         System.out.println(bestTree.getT());
         System.out.println(bestRate);
-
-
 
         // running algorithm on both the validation and training set with the best sized tree
         int[] allIndexes = splitValidationSet(answers_matrix.length, 0)[1];

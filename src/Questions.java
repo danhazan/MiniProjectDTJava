@@ -1,5 +1,14 @@
+import java.util.Map;
+
 public class Questions {
     private static final int MAX_BYTE_VAL = 255;
+    public static final String ROWS_NUM = "ROWS_NUM";
+    public static final String COLS_NUM = "COLS_NUM";
+    public static final String BLOCKS_NUM_SQR = "BLOCKS_NUM_SQR";
+    public static final String ROWS_LEVELS = "ROWS_LEVELS";
+    public static final String COLS_LEVELS = "COLS_LEVELS";
+    public static final String BLOCKS_LEVELS = "BLOCKS_LEVELS";
+
 
 
     public static int[][] convertToAnswersMatrixVer1(int[][] data) {
@@ -35,11 +44,9 @@ public class Questions {
 
     }
 
-    private static int[] askRowQuestion(int[][] pixelMap) {
+    private static int[] askRowQuestion(int[][] pixelMap, int numOfRows, int levelsOfBlack) {
         int dim = pixelMap.length;
-        int rowsInLayer = 4;
-        int levelsOfBlack = 10;
-        int numOfRows = dim/rowsInLayer;  // 7 rows
+        int rowsInLayer = dim/numOfRows;
 
         int[] blackInRows = new int[numOfRows];  // initial values are 0
         for(int i=0; i<dim; i++) {
@@ -54,11 +61,9 @@ public class Questions {
 
     }
 
-    private static int[] askColumnQuestion(int[][] pixelMap) {
+    private static int[] askColumnQuestion(int[][] pixelMap, int numOfCols, int levelsOfBlack) {
         int dim = pixelMap.length;
-        int colsInLayer = 4;
-        int levelsOfBlack = 10;
-        int numOfCols = dim/colsInLayer;  // 7 cols
+        int colsInLayer = dim/numOfCols;
 
         int[] blackInCols = new int[numOfCols];  // initial values are 0
             for(int j=0; j<dim; j++) {
@@ -72,23 +77,21 @@ public class Questions {
         return makeAnswersFromBlackValues(blackInCols, maxBlack, levelsOfBlack);
     }
 
-    private static int[] askBlockQuestion(int[][] pixelMap) {
+    private static int[] askBlockQuestion(int[][] pixelMap, int blocksInRow, int levelsOfBlack) {
         int dim = pixelMap.length;
-        int pixsInBlocks = 4;  // has to be a divisor of 28!!!!
-        int levelsOfBlack = 10;
-        int blocksInRow = dim / pixsInBlocks;  // or in cols
-        int numOfBlocks = (int) Math.pow(blocksInRow, 2);  // 49 blocks
+        int pixelsInBlock = dim / blocksInRow;
+        int numOfBlocks = (int) Math.pow(blocksInRow, 2);
 
         int[] blackInBlock = new int[numOfBlocks];
 
         // do outer loop with block-size jumps
-        for(int i=0; i<dim; i+=pixsInBlocks) {
-            for(int j=0; j<dim; j+=pixsInBlocks) {
+        for(int i=0; i<dim; i+=pixelsInBlock) {
+            for(int j=0; j<dim; j+=pixelsInBlock) {
 
                 // do inner loop, over block-size
-                for(int r=0; r<pixsInBlocks; r++) {
-                    for(int c=0; c<pixsInBlocks; c++) {
-                        int blockId = (i/pixsInBlocks * blocksInRow) + (j/pixsInBlocks);
+                for(int r=0; r<pixelsInBlock; r++) {
+                    for(int c=0; c<pixelsInBlock; c++) {
+                        int blockId = (i/pixelsInBlock * blocksInRow) + (j/pixelsInBlock);
                         blackInBlock[blockId] += pixelMap[i+r][j+c];
                     }
 
@@ -96,7 +99,7 @@ public class Questions {
             }
         }
 
-        int maxBlack = pixsInBlocks * dim * MAX_BYTE_VAL;
+        int maxBlack = pixelsInBlock * dim * MAX_BYTE_VAL;
         return makeAnswersFromBlackValues(blackInBlock, maxBlack, levelsOfBlack);
     }
 
@@ -139,19 +142,24 @@ public class Questions {
     }
 
 
-    public static int[][] convertToAnswersMatrixVer2(int[][] data) {
+    public static int[][] convertToAnswersMatrixVer2(int[][] data, Map<String, Integer> config) {
         int dim = (int) Math.sqrt(data[0].length - 1);  // 28
 
         for(int im=0; im<data.length; im++) {
             int[][] pixelMap = make2D(data[im], dim);
 
+            if(config.get(ROWS_NUM) > dim || config.get(COLS_NUM) > dim || config.get(BLOCKS_NUM_SQR) > dim) {
+                throw new Error("Num of row/cols/blocks can't exceed: " + String.valueOf(dim));
+            }
+            if(dim % config.get(ROWS_NUM) != 0 || dim % config.get(COLS_NUM) != 0 || dim % config.get(BLOCKS_NUM_SQR) != 0) {
+                throw new Error("num of rows/cols/blocks has to be a divisor of: " + String.valueOf(dim));
+            }
 
-            int[] rowAnswers = askRowQuestion(pixelMap);
-            int[] colAnswers = askColumnQuestion(pixelMap);
-            int[] blockAnswers = askBlockQuestion(pixelMap);
+            int[] rowAnswers = askRowQuestion(pixelMap, config.get(ROWS_NUM), config.get(ROWS_LEVELS));
+            int[] colAnswers = askColumnQuestion(pixelMap, config.get(COLS_NUM), config.get(COLS_LEVELS));
+            int[] blockAnswers = askBlockQuestion(pixelMap, config.get(BLOCKS_NUM_SQR), config.get(BLOCKS_LEVELS));
 
-//            data[im] = append(data[im][0], rowAnswers, colAnswers, blockAnswers);
-
+            // TODO: use List conversion
             data[im] = joinArrays(new int[]{data[im][0]}, rowAnswers, colAnswers, blockAnswers);
         }
         return data;
