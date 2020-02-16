@@ -42,9 +42,9 @@ public class TreePredictor {
 
     public static double runPrediction(DecisionTree tree, int[][] images_matrix) {
         int[] predictions = makePredictionsArray(tree, images_matrix);
-//        for(int i=0; i<predictions.length; i++) {
-//            System.out.println(predictions[i]);
-//        }
+        for(int i=0; i<predictions.length; i++) {
+            System.out.println(predictions[i]);
+        }
         System.out.println(getSuccessRate(tree, images_matrix));
         return getSuccessRate(tree, images_matrix);
     }
