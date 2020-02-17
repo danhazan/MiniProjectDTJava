@@ -1,28 +1,29 @@
 import java.util.*;
 
 public class PredictMain {
-    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-//    private static final String DATABSE_FILE_PATH = "resources/kannada_test.csv";
+//    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
+    private static final String DATABSE_FILE_PATH = "resources/kannada_test.csv";
 
 
-    public static void main(String[] args) {
+    public static void main2(String[] args) {
         configTester();
     }
 
-    public static void main2(String[] args) {
+    public static void main(String[] args) {
         int L = 8;
         double P = 20/100.0;
         // TODO: is p=0 or p=100 acceptable
 
         Map<String, Integer> config = new HashMap<String, Integer>() {{
-            put(Questions.ROWS_NUM, 7);
-            put(Questions.ROWS_LEVELS, 10);
-            put(Questions.COLS_NUM, 7);
-            put(Questions.COLS_LEVELS, 10);
-            put(Questions.BLOCKS_NUM_SQR, 7);
-            put(Questions.BLOCKS_LEVELS, 10);
+            put(Questions.ROWS_NUM, 14);
+            put(Questions.ROWS_LEVELS, 15);
+            put(Questions.COLS_NUM, 14);
+            put(Questions.COLS_LEVELS, 15);
+            put(Questions.BLOCKS_NUM_SQR, 28);
+            put(Questions.BLOCKS_LEVELS, 1);
         }};
 
+//        DecisionTree t = TreeMaker.makeTree(L, P, null);
         DecisionTree t = TreeMaker.makeTree(L, P, config);
         int[][] images_matrix = Images.parse_csv(DATABSE_FILE_PATH);
 //        int[][] answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
@@ -54,13 +55,13 @@ public class PredictMain {
         List<Integer> vals = Arrays.asList(2, 4, 7, 14, 28);
         List<double[]> results = new ArrayList<>();
         Map<String, Integer> config;
-        int bn = 2;
+//        int bn = 2;
         for(Integer n: vals) {
-            if(n == 7 || n == 4){
-                bn = n;
-            }
-            for(int l=5; l<=25; l+=2) {
-                config = makeConfig(n, l, n, l, bn, l);
+//            if(n == 7 || n == 4){
+//                bn = n;
+//            }
+            for(int l=1; l<=30; l+=3) {
+                config = makeConfig(n, l, n, l, 28, 1);
 
                 System.out.println();
                 System.out.println("units:" + String.valueOf(n) + ", levels: " + String.valueOf(l));

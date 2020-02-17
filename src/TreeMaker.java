@@ -1,5 +1,3 @@
-import sun.security.krb5.internal.crypto.Des;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -134,6 +132,7 @@ public class TreeMaker {
         System.out.println("chosen:");
         System.out.println(bestTree.getT());
         System.out.println(bestRate);
+        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         // running algorithm on both the validation and training set with the best sized tree
         int[] allIndexes = splitValidationSet(answers_matrix.length, 0)[1];

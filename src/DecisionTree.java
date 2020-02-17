@@ -1,8 +1,5 @@
-import sun.security.krb5.internal.crypto.Des;
-
 import java.util.NoSuchElementException;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 public class DecisionTree {
     private int T;

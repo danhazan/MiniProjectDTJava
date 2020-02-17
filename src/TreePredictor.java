@@ -26,13 +26,27 @@ public class TreePredictor {
     }
 
     public static double getSuccessRate(DecisionTree tree, int[][] answers_matrix) {
+        int[][] digitStats = new int[10][2];
         int[] predictions = makePredictionsArray(tree, answers_matrix);
         double success = 0;
 
         for(int im=0; im<answers_matrix.length; im++) {
-            if (predictions[im] == answers_matrix[im][0]) {
+            int digit = answers_matrix[im][0];
+            if (predictions[im] == digit) {
                 success++;
+                digitStats[digit][1]++;
             }
+            digitStats[digit][0]++;
+        }
+
+
+        for(int i=0; i<10; i++) {
+            System.out.println();
+            System.out.println(i);
+            System.out.println(digitStats[i][0]);
+            System.out.println(digitStats[i][1]);
+            System.out.println((double)digitStats[i][1]/ (double)digitStats[i][0]);
+            System.out.println();
         }
 
         success = success / (double) predictions.length;
