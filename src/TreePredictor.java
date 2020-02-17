@@ -46,7 +46,8 @@ public class TreePredictor {
 //        for(int i=0; i<predictions.length; i++) {
 //            System.out.println(predictions[i]);
 //        }
-        System.out.println(getSuccessRate(tree, images_matrix));
+        //print error, not success
+        System.out.println(1.0 - getSuccessRate(tree, images_matrix));
         return getSuccessRate(tree, images_matrix);
     }
 
