@@ -16,7 +16,7 @@ public class TreeMaker {
         return (n & (n - 1)) == 0;
     }
 
-    private static int[][] splitValidationSet(int indexes, double P) {
+    public static int[][] splitValidationSet(int indexes, double P) {
         List<Integer> allIndexes = IntStream.rangeClosed(0, indexes - 1).boxed().collect(Collectors.toList());
         Collections.shuffle(allIndexes);
 
@@ -34,7 +34,7 @@ public class TreeMaker {
         return sets;
     }
 
-    private static int[][] fromIndexes(int[][] data, int[] indexes) {
+    public static int[][] fromIndexes(int[][] data, int[] indexes) {
         int[][] result = new int[indexes.length][];
 
         for(int im=0; im<indexes.length; im++) {
@@ -87,16 +87,10 @@ public class TreeMaker {
     }
 
 
-    public static DecisionTree makeTree(int L, double P, Map<String, Integer> ver2Config) {
-        // parse images and convert to answers matrix
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-        int[][] images_matrix = Images.parse_csv(TreeMaker.DATABSE_FILE_PATH);
+    public static DecisionTree makeTree(int L, double P, int[][] images_matrix, Map<String, Integer> ver2Config) {
+        int[][] answers_matrix;
         System.out.println(images_matrix.length);
         System.out.println(images_matrix[0].length);
-
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-
-        int[][] answers_matrix;
         if(ver2Config != null){
             answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, ver2Config);
         } else {

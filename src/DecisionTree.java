@@ -3,6 +3,8 @@ import java.util.stream.DoubleStream;
 
 public class DecisionTree {
     private int T;
+    //TODO: this!!
+    private int version;
     int[][] matrix;
     private Node root;
 
