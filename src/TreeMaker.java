@@ -89,16 +89,16 @@ public class TreeMaker {
 
     public static DecisionTree makeTree(int L, double P, int[][] images_matrix, Map<String, Integer> ver2Config) {
         int[][] answers_matrix;
-        System.out.println(images_matrix.length);
-        System.out.println(images_matrix[0].length);
+//        System.out.println(images_matrix.length);
+//        System.out.println(images_matrix[0].length);
         if(ver2Config != null){
             answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, ver2Config);
         } else {
             answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
         }
 
-        System.out.println(answers_matrix[0].length);
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+//        System.out.println(answers_matrix[0].length);
+//        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         int[][] indexes = splitValidationSet(answers_matrix.length, P);
         int[] validationIndexes = indexes[0];
@@ -123,16 +123,16 @@ public class TreeMaker {
         }
         validationSet = null;  // free up some memory
 
-        System.out.println("chosen:");
+//        System.out.println("chosen:");
         System.out.println(bestTree.getT());
-        System.out.println(bestRate);
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+//        System.out.println(bestRate);
+//        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         // running algorithm on both the validation and training set with the best sized tree
         int[] allIndexes = splitValidationSet(answers_matrix.length, 0)[1];
         DecisionTree finalTree = new DecisionTree(answers_matrix, allIndexes);
         finalTree = runAlgorithm(finalTree, L, true).get(0);  // only one tree in the list
-        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+//        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
         return finalTree;
     }
 }

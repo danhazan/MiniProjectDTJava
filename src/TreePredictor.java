@@ -26,7 +26,6 @@ public class TreePredictor {
     }
 
     public static double getSuccessRate(DecisionTree tree, int[][] answers_matrix) {
-        int[][] digitStats = new int[10][2];
         int[] predictions = makePredictionsArray(tree, answers_matrix);
         double success = 0;
 
@@ -34,19 +33,7 @@ public class TreePredictor {
             int digit = answers_matrix[im][0];
             if (predictions[im] == digit) {
                 success++;
-                digitStats[digit][1]++;
             }
-            digitStats[digit][0]++;
-        }
-
-
-        for(int i=0; i<10; i++) {
-            System.out.println();
-            System.out.println(i);
-            System.out.println(digitStats[i][0]);
-            System.out.println(digitStats[i][1]);
-            System.out.println((double)digitStats[i][1]/ (double)digitStats[i][0]);
-            System.out.println();
         }
 
         success = success / (double) predictions.length;
@@ -56,9 +43,9 @@ public class TreePredictor {
 
     public static double runPrediction(DecisionTree tree, int[][] images_matrix) {
         int[] predictions = makePredictionsArray(tree, images_matrix);
-        for(int i=0; i<predictions.length; i++) {
-            System.out.println(predictions[i]);
-        }
+//        for(int i=0; i<predictions.length; i++) {
+//            System.out.println(predictions[i]);
+//        }
         System.out.println(getSuccessRate(tree, images_matrix));
         return getSuccessRate(tree, images_matrix);
     }

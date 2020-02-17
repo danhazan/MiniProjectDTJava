@@ -66,6 +66,10 @@ public class PredictMain {
 
 
     public static void experiment(int ver, int dataset) {
+        System.out.println();
+        System.out.println("Ver: " + String.valueOf(ver));
+        System.out.println("Dataset: " + String.valueOf(dataset));
+
         String testDS;
         String trainDS;
         if(dataset == 1) {
@@ -77,14 +81,16 @@ public class PredictMain {
         }
 
 
-        for(double i=0.01; i<=1.0; i+=0.01) {
+        for(int i=1; i<=100; i++) {
+            double I = i/100.0;
+
             int L = 8;
             double P = 20/100.0;
 
             //TRAIN::
 
             int[][] all_images_matrix = Images.parse_csv(trainDS);
-            int[][] indexes = TreeMaker.splitValidationSet(all_images_matrix.length, i);
+            int[][] indexes = TreeMaker.splitValidationSet(all_images_matrix.length, I);
             int[][] images_matrix = TreeMaker.fromIndexes(all_images_matrix, indexes[0]);
 
             DecisionTree t;
