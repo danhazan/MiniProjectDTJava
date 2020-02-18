@@ -124,8 +124,6 @@ public class TreeMaker {
         validationSet = null;  // free up some memory
 
 //        System.out.println("chosen:");
-        System.out.println(bestTree.getT());
-//        System.out.println(bestRate);
 //        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         // running algorithm on both the validation and training set with the best sized tree
@@ -133,6 +131,13 @@ public class TreeMaker {
         DecisionTree finalTree = new DecisionTree(answers_matrix, allIndexes);
         finalTree = runAlgorithm(finalTree, L, true).get(0);  // only one tree in the list
 //        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+
+
+
+        int error = (int) ((1.0 - bestRate) * 100);
+        System.out.println("num: " + String.valueOf(answers_matrix.length));
+        System.out.println("error: " + String.valueOf(error));
+        System.out.println("size: " + finalTree.getT());
         return finalTree;
     }
 }
