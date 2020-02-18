@@ -1,5 +1,3 @@
-import com.sun.source.tree.Tree;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -9,7 +7,7 @@ public class PredictMain {
 //    private static final String TRAIN_FILE_PATH = "resources/kannada_train.csv";
 //    private static final String TEST_FILE_PATH = "resources/kannada_test.csv";
 
-    private static Map<String, Integer> BEST_CONFIG = new HashMap<>() {{
+    private static Map<String, Integer> BEST_CONFIG = new HashMap<String, Integer>() {{
         put(Questions.ROWS_NUM, 14);
         put(Questions.ROWS_LEVELS, 15);
         put(Questions.COLS_NUM, 14);
@@ -19,7 +17,7 @@ public class PredictMain {
     }};
 
 
-    public static void main(String[] args) {
+    public static void main2(String[] args) {
 //        configTester();
         experiment(1, 1);
         experiment(1, 2);
@@ -27,7 +25,7 @@ public class PredictMain {
         experiment(2, 2);
     }
 
-    public static void main2(String[] args) {
+    public static void main(String[] args) {
         int L = 8;
         double P = 20/100.0;
         // TODO: is p=0 or p=100 acceptable
@@ -38,7 +36,8 @@ public class PredictMain {
         int[][] images_matrix = Images.parse_csv(TRAIN_FILE_PATH);
         System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 //        DecisionTree t = TreeMaker.makeTree(L, P, null);
-        DecisionTree t = TreeMaker.makeTree(L, P, images_matrix, BEST_CONFIG);
+        DecisionTree t = TreeMaker.makeTree(1, P, L, images_matrix, Questions.BEST_CONFIG);
+//        DecisionTree t = TreeMaker.makeTree(2, P, L, images_matrix, Questions.BEST_CONFIG);
 
 
 
@@ -96,9 +95,9 @@ public class PredictMain {
             DecisionTree t;
 
             if(ver == 1) {
-                t = TreeMaker.makeTree(L, P, images_matrix, null);
+                t = TreeMaker.makeTree(1, P, L, images_matrix, Questions.BEST_CONFIG);
             } else {
-                t = TreeMaker.makeTree(L, P, images_matrix, BEST_CONFIG);
+                t = TreeMaker.makeTree(2, P, L, images_matrix, Questions.BEST_CONFIG);
             }
 
 

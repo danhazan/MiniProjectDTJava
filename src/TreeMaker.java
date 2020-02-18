@@ -87,14 +87,14 @@ public class TreeMaker {
     }
 
 
-    public static DecisionTree makeTree(int L, double P, int[][] images_matrix, Map<String, Integer> ver2Config) {
+    public static DecisionTree makeTree(int version, double P, int L, int[][] images_matrix, Map<String, Integer> ver2Config) {
         int[][] answers_matrix;
 //        System.out.println(images_matrix.length);
 //        System.out.println(images_matrix[0].length);
-        if(ver2Config != null){
-            answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, ver2Config);
-        } else {
+        if(version == 1){
             answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
+        } else {
+            answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, ver2Config);
         }
 
 //        System.out.println(answers_matrix[0].length);

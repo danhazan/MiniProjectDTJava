@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.Map;
 
 public class Questions {
@@ -8,6 +9,15 @@ public class Questions {
     public static final String ROWS_LEVELS = "ROWS_LEVELS";
     public static final String COLS_LEVELS = "COLS_LEVELS";
     public static final String BLOCKS_LEVELS = "BLOCKS_LEVELS";
+
+    public static Map<String, Integer> BEST_CONFIG = new HashMap<String, Integer>() {{
+        put(Questions.ROWS_NUM, 14);
+        put(Questions.ROWS_LEVELS, 15);
+        put(Questions.COLS_NUM, 14);
+        put(Questions.COLS_LEVELS, 15);
+        put(Questions.BLOCKS_NUM_SQR, 28);
+        put(Questions.BLOCKS_LEVELS, 1);
+    }};
 
 
 

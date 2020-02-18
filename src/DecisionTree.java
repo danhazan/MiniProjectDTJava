@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.util.NoSuchElementException;
 import java.util.stream.DoubleStream;
 
-public class DecisionTree {
+public class DecisionTree implements Serializable {
     private int T;
     //TODO: this!!
     private int version;
@@ -46,7 +47,7 @@ public class DecisionTree {
     }
 }
 
-abstract class Node {
+abstract class Node implements Serializable {
     protected DecisionTree tree;
     protected InternalNode parent;
     protected int[] indexes;

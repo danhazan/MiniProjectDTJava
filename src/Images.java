@@ -20,7 +20,6 @@ public class Images {
                 line = br.readLine();
             }
         } catch (IOException e) {
-            System.out.println("File not found: " + e.getMessage());
             return null;
         }
 
