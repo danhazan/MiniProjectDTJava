@@ -23,7 +23,6 @@ public class PredictMain {
             Object obj = treeObjStream.readObject();
             if (obj instanceof DecisionTree) {
                 t = (DecisionTree) obj;
-                System.out.println(t.getT());
             } else {
                 throw new ClassNotFoundException("");
             }
