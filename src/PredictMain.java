@@ -10,7 +10,7 @@ public class PredictMain {
     }
 
     public static void main(String[] args) {
-        if(args.length < 2) {
+        if (args.length < 2) {
             exit("Usage: predict <tree_filename> <testset_filename>");
         }
 
@@ -21,7 +21,7 @@ public class PredictMain {
         try {
             ObjectInputStream treeObjStream = new ObjectInputStream(new FileInputStream(treeFileName));
             Object obj = treeObjStream.readObject();
-            if(obj instanceof DecisionTree){
+            if (obj instanceof DecisionTree) {
                 t = (DecisionTree) obj;
                 System.out.println(t.getT());
             } else {
@@ -38,7 +38,13 @@ public class PredictMain {
             exit("Error opening file " + testSetFileName);
         }
 
-        int[][] answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, Questions.BEST_CONFIG);
+        int[][] answers_matrix;
+        if (t.getVersion() == 1) {
+            answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
+        } else {
+            answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, Questions.BEST_CONFIG);
+        }
+
         TreePredictor.runPrediction(t, answers_matrix);
     }
 }

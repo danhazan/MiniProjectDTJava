@@ -1,14 +1,9 @@
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
 public class TreeMaker {
-//    private static final String DATABSE_FILE_PATH = "resources/mnist_test.csv";
-    public static final String DATABSE_FILE_PATH = "resources/mnist_train.csv";
-//    public static final String DATABSE_FILE_PATH = "resources/kannada_train.csv";
-
     /**
      * binary check for a number being a power of 2 (or 0)
      */
@@ -34,17 +29,28 @@ public class TreeMaker {
         return sets;
     }
 
-    public static int[][] fromIndexes(int[][] data, int[] indexes) {
+    /**
+     * Get a subset of the given matrix, based on a list of indexes
+     */
+    private static int[][] fromIndexes(int[][] matrix, int[] indexes) {
         int[][] result = new int[indexes.length][];
 
         for(int im=0; im<indexes.length; im++) {
-            result[im] = data[indexes[im]];
+            result[im] = matrix[indexes[im]];
         }
         return result;
     }
 
 
-    private static List<DecisionTree> runAlgorithm(DecisionTree buildTree, int L, boolean singleTree) {
+    /**
+     * Run the tree building algorithm
+     * @param buildTree: an initialized DecisionTree object
+     * @param version: 1/2
+     * @param singleTree: whether to return just the last tree (with max(T))
+     * @return a list of trees with increasing sizes, one for every T value,
+     * which were produced during the algorithm run
+     */
+    private static List<DecisionTree> runAlgorithm(DecisionTree buildTree, int L, int version, boolean singleTree) {
         int maxT = (int) Math.pow(2, L);
         List<DecisionTree> trees = new ArrayList<>(singleTree ? 1 : L+1);  // list of potential trees (or just the one)
         List<IGStruct> leafsIGs = new ArrayList<>(maxT);  // a list of all the leafs in the tree with their max IGS
@@ -75,12 +81,12 @@ public class TreeMaker {
 
             // copy the tree if it's a proper T value (power of 2)
             if (isPowerOf2(i) && !singleTree) {
-                trees.add(new DecisionTree(buildTree, i));
+                trees.add(new DecisionTree(buildTree, i, version));
             }
         }
 
         if (singleTree) {
-            trees.add(new DecisionTree(buildTree, maxT));
+            trees.add(new DecisionTree(buildTree, maxT, version));
         }
 
         return trees;
@@ -89,16 +95,11 @@ public class TreeMaker {
 
     public static DecisionTree makeTree(int version, double P, int L, int[][] images_matrix, Map<String, Integer> ver2Config) {
         int[][] answers_matrix;
-//        System.out.println(images_matrix.length);
-//        System.out.println(images_matrix[0].length);
         if(version == 1){
             answers_matrix = Questions.convertToAnswersMatrixVer1(images_matrix);
         } else {
             answers_matrix = Questions.convertToAnswersMatrixVer2(images_matrix, ver2Config);
         }
-
-//        System.out.println(answers_matrix[0].length);
-//        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
 
         int[][] indexes = splitValidationSet(answers_matrix.length, P);
         int[] validationIndexes = indexes[0];
@@ -106,7 +107,7 @@ public class TreeMaker {
 
         // run the algorithm the first time - to generate a tree for every T value
         DecisionTree validationTree = new DecisionTree(answers_matrix, trainingIndexes);
-        List<DecisionTree> trees = runAlgorithm(validationTree, L, false);
+        List<DecisionTree> trees = runAlgorithm(validationTree, L, version, false);
 
 
         // choose the tree with the best success rate using the validation set on the generated trees
@@ -123,15 +124,10 @@ public class TreeMaker {
         }
         validationSet = null;  // free up some memory
 
-//        System.out.println("chosen:");
-//        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-
         // running algorithm on both the validation and training set with the best sized tree
         int[] allIndexes = splitValidationSet(answers_matrix.length, 0)[1];
         DecisionTree finalTree = new DecisionTree(answers_matrix, allIndexes);
-        finalTree = runAlgorithm(finalTree, L, true).get(0);  // only one tree in the list
-//        System.out.println(new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
-
+        finalTree = runAlgorithm(finalTree, L, version, true).get(0);  // only one tree in the list
 
 
         int error = (int) ((1.0 - bestRate) * 100);

@@ -20,7 +20,11 @@ public class Questions {
     }};
 
 
-
+    /**
+     * Converts the the given raw data (from the csv) to binary answers for Ver1 questions,
+     * in which every column represents an answer to a question (except for 0 for label).
+     * It does it completely in place - since there is a question for each pixel
+     */
     public static int[][] convertToAnswersMatrixVer1(int[][] data) {
         for(int i=0; i<data.length; i++) {
             for(int j=1; j<data[0].length; j++) {
@@ -31,6 +35,11 @@ public class Questions {
         return data;
     }
 
+    /**
+     * Returns a row of binary answers for the entries in blackValues x levelsOfBlack.
+     * Each question is about keeping beneath a level (threshold) of black levels in that specific item,
+     * which can be a row/column/block, and the levels being evenly spaced between 0 and maxBlack
+     */
     private static int[] makeAnswersFromBlackValues(int[] blackValues, int maxBlack, int levelsOfBlack) {
         int numOfRows = blackValues.length;
         int[] answers = new int[levelsOfBlack * numOfRows];
@@ -42,7 +51,6 @@ public class Questions {
 
                 //TODO: mayble check range, not just <=
                 if(blackValues[row] <= blackLevel) {
-//                if(blackLevel <= blackValues[row] && blackValues[row] <= blackLevel + unit) {
                     answers[row*levelsOfBlack + lvl] = 1;
                 } else {
                     answers[row*levelsOfBlack + lvl] = 0;
@@ -54,11 +62,16 @@ public class Questions {
 
     }
 
+    /**
+     * Returns a row of binary answers for a given pixelMap on its rows.
+     * @param numOfRows: how many rows should the pixelMap be divided to.
+     * @param levelsOfBlack: see at makeAnswersFromBlackValue
+     */
     private static int[] askRowQuestion(int[][] pixelMap, int numOfRows, int levelsOfBlack) {
         int dim = pixelMap.length;
         int rowsInLayer = dim/numOfRows;
 
-        int[] blackInRows = new int[numOfRows];  // initial values are 0
+        int[] blackInRows = new int[numOfRows];
         for(int i=0; i<dim; i++) {
             int rowNum = i / rowsInLayer;
             for(int j=0; j<dim; j++) {
@@ -71,11 +84,16 @@ public class Questions {
 
     }
 
+    /**
+     * Returns a row of binary answers for a given pixelMap on its columns.
+     * @param numOfCols: how many columns should the pixelMap be divided to.
+     * @param levelsOfBlack: see at makeAnswersFromBlackValue
+     */
     private static int[] askColumnQuestion(int[][] pixelMap, int numOfCols, int levelsOfBlack) {
         int dim = pixelMap.length;
         int colsInLayer = dim/numOfCols;
 
-        int[] blackInCols = new int[numOfCols];  // initial values are 0
+        int[] blackInCols = new int[numOfCols];
             for(int j=0; j<dim; j++) {
             int colNum = j / colsInLayer;
                 for(int i=0; i<dim; i++) {
@@ -87,6 +105,12 @@ public class Questions {
         return makeAnswersFromBlackValues(blackInCols, maxBlack, levelsOfBlack);
     }
 
+    /**
+     * Returns a row of binary answers for a given pixelMap on its blocks.
+     * @param blocksInRow: how many blocks should be in a row, which makes it the square root
+     *                     of the total number of blocks in the pixel map
+     * @param levelsOfBlack: see at makeAnswersFromBlackValue
+     */
     private static int[] askBlockQuestion(int[][] pixelMap, int blocksInRow, int levelsOfBlack) {
         int dim = pixelMap.length;
         int pixelsInBlock = dim / blocksInRow;
@@ -113,6 +137,9 @@ public class Questions {
         return makeAnswersFromBlackValues(blackInBlock, maxBlack, levelsOfBlack);
     }
 
+    /**
+     * Get a 2D representation of the pixels in the image (a pixel map) from an image entry
+     */
     private static int[][] make2D(int[] image, int dim) {
         int[][] res = new int[dim][dim];
         for(int i=0; i<image.length-1; i++) {  // shifted due to the label at index 0
@@ -146,12 +173,17 @@ public class Questions {
             res[i+j+k+m] = d[m];
         }
 
-
-
         return res;
     }
 
 
+    /**
+     * Converts the the given raw data (from the csv) to binary answers for Ver2 questions.
+     * in which every column represents an answer to a question (except for 0 for label)
+     * It uses a configuration, which defines how many rows/columns/blocks should the image be divided to,
+     * And for each of them how many questions should be created - which are for different levels (threshold)
+     * of black of the sum of their pixels
+     */
     public static int[][] convertToAnswersMatrixVer2(int[][] data, Map<String, Integer> config) {
         int dim = (int) Math.sqrt(data[0].length - 1);  // 28
 
@@ -169,7 +201,6 @@ public class Questions {
             int[] colAnswers = askColumnQuestion(pixelMap, config.get(COLS_NUM), config.get(COLS_LEVELS));
             int[] blockAnswers = askBlockQuestion(pixelMap, config.get(BLOCKS_NUM_SQR), config.get(BLOCKS_LEVELS));
 
-            // TODO: use List conversion
             data[im] = joinArrays(new int[]{data[im][0]}, rowAnswers, colAnswers, blockAnswers);
         }
         return data;

@@ -4,16 +4,21 @@ import java.util.stream.DoubleStream;
 
 public class DecisionTree implements Serializable {
     private int T;
-    //TODO: this!!
     private int version;
     int[][] matrix;
     private Node root;
 
+    /**
+     * Represents a decision tree
+     * @param matrix: an dataset in the format of an answers matrix,
+     *                which means that it's columns are the answers to the questions
+     * @param indexes - a list containing all the images that reach the root node,
+     *                 Usually all of them (indexes = {0, ..., matrix.length - 1}
+     */
     DecisionTree(int[][] matrix, int[] indexes) {
         this.matrix = matrix;
         this.root = new LeafNode(this, null, indexes, 0);
     }
-
 
     /**
      * Makes a copy of the tree.
@@ -25,9 +30,10 @@ public class DecisionTree implements Serializable {
         root = other.root.copy();
     }
 
-    DecisionTree(DecisionTree other, int T) {
+    DecisionTree(DecisionTree other, int T, int version) {
         this(other);
         this.T = T;
+        this.version = version;
     }
 
     public void setRoot(Node newRoot) {
@@ -42,8 +48,8 @@ public class DecisionTree implements Serializable {
         return T;
     }
 
-    public void setT(int t) {
-        T = t;
+    public int getVersion() {
+        return version;
     }
 }
 
@@ -58,7 +64,7 @@ abstract class Node implements Serializable {
      * @param tree - the original tree object
      * @param parent - the parent node
      * @param indexes - a list containing all the images that reach this node,
-     *                represented by their index in the original matrix (the questions and answers matrix)
+     *                represented by their index in tree.matrix
      */
     protected Node(DecisionTree tree, InternalNode parent, int[] indexes) {
         this.tree = tree;
@@ -82,6 +88,11 @@ abstract class Node implements Serializable {
     protected Node(){}  // to allow copy constructors of deriving classes
 
 
+    /**
+     * Returns two lists, each of which contains the Ni values for each of the digits,
+     * one for the left child node - Ni(La), and one for the right - Ni(Lb),
+     * based on the given question id, and of course - the images that reached this node (this.indexes)
+     */
     public double[][] getSplitNiArrays(int question) {
         double[] leftNiArray = new double[10];
         double[] rightNiArray = new double[10];
@@ -108,7 +119,7 @@ class InternalNode extends Node {
     /**
      * An internal node, which is initialized with a question, and creates it's own child nodes
      * based on that question (and the indexes)
-     * @param question - a question id, from 1 to 785 (in ver1) (because column 0 in the matrix holds the labels)
+     * @param question - a question id, (from 1 to 785 in ver1 - column 0 is for the label)
      */
     protected InternalNode(DecisionTree tree, InternalNode parent, int[] indexes, int question) {
         super(tree, parent, indexes);
@@ -152,8 +163,10 @@ class InternalNode extends Node {
         return right;
     }
 
-    private int[] getMostCommonDigits(int question, double[] leftNiArray, double[] rightNiArray) {
-
+    /**
+     * Returns the most common digit in the left and right child nodes, based on their Ni(L) values
+     */
+    private int[] getMostCommonDigits(double[] leftNiArray, double[] rightNiArray) {
         int leftDigit = -1;
         double leftLargest = -1;
         int rightDigit = -1;
@@ -172,6 +185,10 @@ class InternalNode extends Node {
         return new int[] {leftDigit, rightDigit};
     }
 
+    /**
+     * Splits the indexes of this node (of the images that reach it)
+     * to left and right, based on the given question
+     */
     public int[][] getSplitIndexes(int question, int leftNL, int rightNL) {
         int[] leftIndexes = new int[leftNL];
         int leftCounter = 0;
@@ -202,7 +219,7 @@ class InternalNode extends Node {
         int leftNL = (int) DoubleStream.of(leftNiArray).sum();
         int rightNL = (int) DoubleStream.of(rightNiArray).sum();
 
-        int[] commonDigits = getMostCommonDigits(question, leftNiArray, rightNiArray);
+        int[] commonDigits = getMostCommonDigits(leftNiArray, rightNiArray);
         int[][] indexes = getSplitIndexes(question, leftNL, rightNL);
 
 
@@ -248,13 +265,11 @@ class LeafNode extends Node {
      * @return - the entropy
      */
     private double HL() {
-        //TODO: cache this??
         double[] NiArray = new double[10];
         for(int im=0; im<indexes.length; im++){
             NiArray[tree.matrix[indexes[im]][0]]++;
         }
 
-        //TODO: change to indexes.length?
         double NL = DoubleStream.of(NiArray).sum();
         return HL(NiArray, NL);
     }
@@ -294,15 +309,7 @@ class LeafNode extends Node {
 
         double leftNL = DoubleStream.of(leftNiArray).sum();
         double rightNL = DoubleStream.of(rightNiArray).sum();
-        int NL = indexes.length;  // TODO: check before if it's zero?
-
-//        if (q== 379) {
-//            System.out.println(q);
-//            System.out.println(Arrays.toString(leftNiArray));
-//            System.out.println(Arrays.toString(rightNiArray));
-//            System.out.println(leftNL + rightNL);
-//            System.out.println();
-//        }
+        int NL = indexes.length;
 
         return (leftNL / NL) * HL(leftNiArray, leftNL) + (rightNL / NL) * HL(rightNiArray, rightNL);
     }
@@ -314,7 +321,7 @@ class LeafNode extends Node {
      * This is probably the heaviest operation in the whole algorithm.
      */
     public IGStruct getBestIG(){
-        double _HL = HL();  // TODO: probably good enough caching
+        double _HL = HL();
         if (_HL == 0) {
             return new IGStruct(this, 0, 1);  // choose question 1 for debug-ability
         }

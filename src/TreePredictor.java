@@ -25,6 +25,9 @@ public class TreePredictor {
         return predictions;
     }
 
+    /**
+     * Returns the success percentage (as a fracture) of the given tree on a dataset
+     */
     public static double getSuccessRate(DecisionTree tree, int[][] answers_matrix) {
         int[] predictions = makePredictionsArray(tree, answers_matrix);
         double success = 0;
