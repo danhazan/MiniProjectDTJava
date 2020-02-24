@@ -1,11 +1,12 @@
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 
 public class LearnTreeMain {
 
     private static void exit(String msg) {
         System.err.println(msg);
         System.exit(1);
-
     }
 
     public static void main(String[] args) {
@@ -61,25 +62,5 @@ public class LearnTreeMain {
         } catch (IOException e) {
             exit("Error opening file " + outputTreeFile);
         }
-
-
-        //for predict::
-
-//        DecisionTree t;
-        try {
-//            ObjectInputStream treeObjStream = new ObjectInputStream(new FileInputStream(inputTreeFile));
-            ObjectInputStream treeObjStream = new ObjectInputStream(new FileInputStream(outputTreeFile));
-            Object obj = treeObjStream.readObject();
-            if(obj instanceof DecisionTree){
-                t = (DecisionTree) obj;
-            } else {
-                throw new ClassNotFoundException("");
-            }
-        } catch (IOException e) {
-            exit("Error opening file " + outputTreeFile);
-        } catch (ClassNotFoundException e) {
-            exit("Error reading file " + outputTreeFile);
-        }
-
     }
 }
