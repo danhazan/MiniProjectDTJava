@@ -1,3 +1,6 @@
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+
 public class TreePredictor {
     /**
      * Returns predictions by the tree of the data matrix
@@ -44,13 +47,47 @@ public class TreePredictor {
     }
 
 
-    public static double runPrediction(DecisionTree tree, int[][] images_matrix) {
+    public static void runPrediction(DecisionTree tree, int[][] images_matrix) {
         int[] predictions = makePredictionsArray(tree, images_matrix);
         for(int i=0; i<predictions.length; i++) {
             System.out.println(predictions[i]);
         }
-        //print error, not success
-        System.out.println("\n\nDELETE BEFORE SUBMITTING!!!!!");
+    }
+
+
+    public static double getConfusionMatrix(DecisionTree tree, int[][] images_matrix) {
+        int[] predictions = makePredictionsArray(tree, images_matrix);
+
+        double[] instances = new double[10];
+        double[][] confusion_matrix = new double[10][10];
+
+        for(int i=0; i<images_matrix.length; i++) {
+            int actualDigit = images_matrix[i][0];
+
+            // count instances of digits in the dataset
+            instances[actualDigit]++;
+
+            // count for each digit its prediction
+            confusion_matrix[actualDigit][predictions[i]]++;
+        }
+
+
+        DecimalFormat df = new DecimalFormat("#.###");
+        df.setRoundingMode(RoundingMode.CEILING);
+        for(int i=0; i<10; i++) {
+            for(int j=0; j<10; j++) {
+                confusion_matrix[i][j] /= instances[i];
+                System.out.print(df.format(confusion_matrix[i][j]));
+                System.out.print("\t");
+            }
+            System.out.println();
+
+        }
+
+
+
+
+        System.out.println();
         System.out.println(1.0 - getSuccessRate(tree, images_matrix));
         return getSuccessRate(tree, images_matrix);
     }
